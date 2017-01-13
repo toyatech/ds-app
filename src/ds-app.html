@@ -68,7 +68,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       paper-tab[link] a {
         @apply(--layout-horizontal);
-        @apply(--layout-center-center);
+        @apply(--layout-end);
+        margin: 0 10px 0 10px;
         color: #fff;
         text-decoration: none;
       }
@@ -108,6 +109,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <app-toolbar>
             <paper-icon-button class="menu-button" icon="ds-icons:menu" drawer-toggle hidden$="{{wideLayout}}"></paper-icon-button>
             <div main-title>Layton Avenue Baptist Church</div>
+            <span>Dusty Little&nbsp;</span>
+            <div class="circle">
+              <iron-icon icon="ds-icons:person"></iron-icon>
+            </div>
             
           </app-toolbar>
           <app-toolbar class="tabs-bar">
