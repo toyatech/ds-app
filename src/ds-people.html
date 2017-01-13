@@ -1,0 +1,69 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-scroll-threshold/iron-scroll-threshold.html">
+<link rel="import" href="ds-app-theme.html">
+
+<dom-module id="ds-people">
+  <template>
+    <style include="ds-app-theme">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+ 
+    <iron-ajax 
+      id="ajax" 
+      url="http://localhost:8081/api/v0/people" 
+      handle-as="json" 
+      params='{}'
+      on-response="_peopleLoaded"></iron-ajax>
+
+    <div class="card">
+      <h1>People</h1>
+        <iron-list id="people" items="[[people]]" as="person" scroll-target="threshold">
+          <template>
+            <div>
+              <div class="personItem" tabindex$="[[tabIndex]]">
+                <div class="pad">
+                  <div class="primary">[[person.name.first]] [[person.name.last]]</div>
+                </div>
+              </div>
+            </div>
+          </template>  
+      </iron-list>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'ds-people',
+      attached: function() {
+        this.people = [];
+      },
+      _loadPeople: function() {
+        this.$.ajax.generateRequest();
+      },
+      _peopleLoaded: function(e) {
+        console.log(e.detail.response);
+        var self = this;
+        var people = e.detail.response;
+        people.forEach(function(person) {
+          self.push('people', person);
+        });
+        this.$.threshold.clearTriggers();
+      }
+    });
+  </script>
+</dom-module>

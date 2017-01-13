@@ -18,7 +18,10 @@
     "polymer": "Polymer/polymer#^1.6.0",
     "paper-tabs": "PolymerElements/paper-tabs#^1.7.0",
     "paper-menu": "PolymerElements/paper-menu#^1.2.2",
-    "paper-input": "PolymerElements/paper-input#^1.1.22"
+    "paper-input": "PolymerElements/paper-input#^1.1.22",
+    "iron-ajax": "PolymerElements/iron-ajax#^1.4.3",
+    "iron-scroll-threshold": "PolymerElements/iron-scroll-threshold#^1.0.3",
+    "paper-menu-button": "PolymerElements/paper-menu-button#^1.5.2"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"
