@@ -11,6 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-scroll-threshold/iron-scroll-threshold.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
 <link rel="import" href="ds-app-theme.html">
 
 <dom-module id="ds-people">
@@ -25,40 +26,100 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
  
     <iron-ajax 
       id="ajax" 
-      url="http://localhost:8081/api/v0/people" 
+      url="http://localhost:8081/api/v0/people?select=name" 
       handle-as="json" 
-      params='{}'
-      on-response="_peopleLoaded"></iron-ajax>
+      on-response="_handleResponse"></iron-ajax>
 
     <div class="card">
-      <h1>People</h1>
+      <iron-scroll-threshold on-lower-threshold="_loadMoreData" id="threshold">
         <iron-list id="people" items="[[people]]" as="person" scroll-target="threshold">
           <template>
-            <div>
-              <div class="personItem" tabindex$="[[tabIndex]]">
-                <div class="pad">
-                  <div class="primary">[[person.name.first]] [[person.name.last]]</div>
-                </div>
-              </div>
-            </div>
+            <div>[[person.name.first]] [[person.name.last]]</div>
           </template>  
-      </iron-list>
+        </iron-list>
+      </iron-scroll-threshold>
     </div>
   </template>
 
   <script>
     Polymer({
       is: 'ds-people',
-      attached: function() {
-        this.people = [];
+      properties: {
+        field: {
+          type: String,
+          value: 'firstName'
+        },
+        people: {
+          type: Array,
+          value: []
+        },
+        firstName: Array,
+        lastName: Array
       },
-      _loadPeople: function() {
+      attached: function() {
+        this._groupByIndexMap = {
+          firstName: {},
+          lastName: {}
+        };
+        this.people = [];
+        this.links = {next: 'http://localhost:8081/api/v0/people?select=name'};
+      },
+      ready: function() {
+        //this.$.ajax.generateRequest();
+      },
+      _sort: function(field) {
+        return function(a, b) {
+          return a[field].localeCompare(b[field]);
+        };
+      },
+      _group: function(field, items) {
+        var items = items.slice().sort(this._sort(field)); 
+        var grouped = [];
+        this._groupByIndexMap[field] = items.reduce(
+          function(map, itm, idx, arr) {
+            if (idx == 0 || item[field] != arr[idx-1][field]) {
+              map[idx] = true;
+              grouped.push({ 
+                firstName: item.firstName,
+                lastName: item.lastName,
+                index: idx
+              });
+            }
+            return map;
+          }, {}
+        );
+        this[field] = grouped;
+        return items;
+      },
+      _hasGroup: function(field, index) {
+        return this._groupByIndexMap[field][index] == true;
+      },
+      _loadMoreData: function() {
+        console.log(this.links);
+        this.$.ajax.url =  this.links.next;
         this.$.ajax.generateRequest();
       },
-      _peopleLoaded: function(e) {
-        console.log(e.detail.response);
+      _parseLinkHeader: function(header) {
+        if (header.length === 0) {
+          throw new Error("input must not be of zero length");
+        }
+        var parts = header.split(',');
+        var links = {};
+        for(var i=0; i<parts.length; i++) {
+          var section = parts[i].split(';');
+          if (section.length !== 2) {
+            throw new Error("section could not be split on ';'");
+          }
+          var url = section[0].replace(/<(.*)>/, '$1').trim();
+          var name = section[1].replace(/rel="(.*)"/, '$1').trim();
+          links[name] = 'http://localhost:8081'+ url;
+        }
+        return links;
+      },
+      _handleResponse: function (e, detail) {
         var self = this;
         var people = e.detail.response;
+        this.links = this._parseLinkHeader(detail.xhr.getResponseHeader('link'));
         people.forEach(function(person) {
           self.push('people', person);
         });
