@@ -9,9 +9,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-scroll-threshold/iron-scroll-threshold.html">
 <link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="ds-app-theme.html">
 
 <dom-module id="ds-people">
@@ -19,26 +24,95 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style include="ds-app-theme">
       :host {
         display: block;
-
         padding: 10px;
+      }
+      .loadingIndicator {
+        text-align: center;
+        height: 40px;
+      }
+      .loadingIndicator paper-spinner {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+      }
+      iron-list {
+        padding-top: 64px;
+        padding-bottom: 16px;
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 60px;
+          margin-bottom: 10px;
+        };
+      }
+      .personItem {
+        @apply(--layout-horizontal);
+        margin: 16px 16px 0 16px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: white;
+        border: 1px solid #ddd;
+      }
+      .avatar {
+        height: 40px;
+        width: 40px;
+        border-radius: 20px;
+        box-sizing: border-box;
+        background-color: #DDD;
+      }
+      .pad {
+        padding: 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      address {
+        font-size: 14px;
+        margin: 10px 0;
+      }
+      .spacer {
+        @apply(--layout-flex);
+      }
+      .index {
+        width: 30px;
       }
     </style>
  
     <iron-ajax 
       id="ajax" 
-      url="http://localhost:8081/api/v0/people?select=name" 
-      handle-as="json" 
+      url="http://localhost:8081/api/v0/people"
+      params='{"select": "name"}'
+      handle-as="json"
+      loading="{{loadingPeople}}"
       on-response="_handleResponse"></iron-ajax>
 
-    <div class="card">
-      <iron-scroll-threshold on-lower-threshold="_loadMoreData" id="threshold">
-        <iron-list id="people" items="[[people]]" as="person" scroll-target="threshold">
-          <template>
-            <div>[[person.name.first]] [[person.name.last]]</div>
-          </template>  
-        </iron-list>
-      </iron-scroll-threshold>
+    <iron-list id="list" items="[[people]]" as="person" scroll-target="html">
+      <template>
+        <div>
+          <div class="personItem" tabindex$="[[tabIndex]]">
+            <iron-image class="avatar" sizing="contain" src="http://localhost:8081/public/images/user-image.png"></iron-image>
+            <div class="pad">
+              <div class="primary">[[person.name.first]] [[person.name.last]]</div>
+            </div>
+          </div>
+        </div>
+      </template>  
+    </iron-list>
+
+    <div class="loadingIndicator">
+      <paper-spinner active="{{loadingPeople}}"></paper-spinner>Fetching data...
     </div>
+
+    <iron-scroll-threshold 
+      id="scrollThreshold"
+      lower-threshold="100"
+      on-lower-threshold="_loadMoreData"
+      scroll-target="html">
+    </iron-scroll-threshold>
+    
   </template>
 
   <script>
