@@ -82,6 +82,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
  
     <iron-ajax 
+      auto
       id="ajax" 
       url="http://localhost:8081/api/v0/people"
       params='{"select": "name"}'
@@ -107,7 +108,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <iron-scroll-threshold 
-      id="scrollThreshold"
+      id="threshold"
       lower-threshold="100"
       on-lower-threshold="_loadMoreData"
       scroll-target="html">
@@ -135,8 +136,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           firstName: {},
           lastName: {}
         };
-        this.people = [];
-        this.links = {next: 'http://localhost:8081/api/v0/people?select=name'};
       },
       ready: function() {
         //this.$.ajax.generateRequest();
