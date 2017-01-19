@@ -84,13 +84,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <iron-ajax 
       auto
       id="ajax" 
-      url="http://localhost:8081/api/v0/people"
+      url="[[_getAPIEndpoint(link)]]"
       params='{"select": "name"}'
       handle-as="json"
       loading="{{loadingPeople}}"
       on-response="_handleResponse"></iron-ajax>
 
-    <iron-list id="list" items="[[people]]" as="person" scroll-target="html">
+    <iron-list id="list" items="[[people]]" as="person" scroll-target="document">
       <template>
         <div>
           <div class="personItem" tabindex$="[[tabIndex]]">
@@ -104,14 +104,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </iron-list>
 
     <div class="loadingIndicator">
-      <paper-spinner active="{{loadingPeople}}"></paper-spinner>Fetching data...
+      <paper-spinner active="{{loadingPeople}}"></paper-spinner>
     </div>
 
     <iron-scroll-threshold 
       id="threshold"
       lower-threshold="100"
-      on-lower-threshold="_loadMoreData"
-      scroll-target="html">
+      on-lower-threshold="_loadMorePeople"
+      scroll-target="document">
     </iron-scroll-threshold>
     
   </template>
@@ -120,56 +120,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     Polymer({
       is: 'ds-people',
       properties: {
-        field: {
+        people: Array,
+        links: {
+          type: Object,
+          value: function() {
+            return {
+              first: '/api/v0/people?p=0'
+            };
+          }
+        },
+        link: {
           type: String,
-          value: 'firstName'
+          value: function() {
+            return this.get('links.first');
+          }
         },
-        people: {
-          type: Array,
-          value: []
-        },
-        firstName: Array,
-        lastName: Array
-      },
-      attached: function() {
-        this._groupByIndexMap = {
-          firstName: {},
-          lastName: {}
-        };
+        loadingPeople: Boolean 
       },
       ready: function() {
-        //this.$.ajax.generateRequest();
+        console.log(this.get(link));
       },
-      _sort: function(field) {
-        return function(a, b) {
-          return a[field].localeCompare(b[field]);
-        };
+      _getAPIEndpoint(link) {
+        return 'http://localhost:8081' + link;
       },
-      _group: function(field, items) {
-        var items = items.slice().sort(this._sort(field)); 
-        var grouped = [];
-        this._groupByIndexMap[field] = items.reduce(
-          function(map, itm, idx, arr) {
-            if (idx == 0 || item[field] != arr[idx-1][field]) {
-              map[idx] = true;
-              grouped.push({ 
-                firstName: item.firstName,
-                lastName: item.lastName,
-                index: idx
-              });
-            }
-            return map;
-          }, {}
-        );
-        this[field] = grouped;
-        return items;
-      },
-      _hasGroup: function(field, index) {
-        return this._groupByIndexMap[field][index] == true;
-      },
-      _loadMoreData: function() {
-        console.log(this.links);
-        this.$.ajax.url =  this.links.next;
+      _loadMorePeople: function() {
+        this.$.ajax.url =  this.get('links.next');
         this.$.ajax.generateRequest();
       },
       _parseLinkHeader: function(header) {
@@ -185,17 +160,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
           var url = section[0].replace(/<(.*)>/, '$1').trim();
           var name = section[1].replace(/rel="(.*)"/, '$1').trim();
-          links[name] = 'http://localhost:8081'+ url;
+          links[name] = url;
         }
         return links;
       },
       _handleResponse: function (e, detail) {
         var self = this;
         var people = e.detail.response;
-        this.links = this._parseLinkHeader(detail.xhr.getResponseHeader('link'));
         people.forEach(function(person) {
           self.push('people', person);
         });
+        this.set('links', this._parseLinkHeader(detail.xhr.getResponseHeader('link')));
         this.$.threshold.clearTriggers();
       }
     });
