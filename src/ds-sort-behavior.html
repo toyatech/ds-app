@@ -1,0 +1,40 @@
+<script>
+
+  window.DSBehaviors = window.DSBehaviors || {};
+  
+  DSBehaviors.SortBehavior = {
+    properties: {
+      sortTerms: {
+        type: Array
+      },
+      sortByTerm: {
+        type: String
+      },
+      sortByOrder: {
+        type: Number,
+        value: -1
+      }
+    },
+    observers: [
+      'sortingObserver(items.*, sortByTerm, sortByOrder)'
+    ],
+    sortingObserver: function(items, sortByTerm, sortByOrder) {
+      var sortedItems = [];
+      this.set('sortedItems', sortedItems);
+      this.querySelector('iron-list').notifyResize();
+    },
+    _computeSort: function(property, order) {
+      return function(a, b) {
+        if (a[property] === b[property]) {
+          return 0;
+        }
+        return (order * (a[property] > b[property] ? 1 : -1));
+      };
+    },
+    _sortItems: function(e) {
+      var sortByTerm = e.currentTarget.getAttribute('sort-option');
+      this.set('sortByTerm', sortByTerm);
+    }
+  }
+
+</script>
